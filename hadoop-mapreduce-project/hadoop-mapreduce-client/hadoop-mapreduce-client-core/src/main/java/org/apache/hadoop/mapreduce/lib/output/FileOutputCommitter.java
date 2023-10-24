@@ -105,6 +105,8 @@ public class FileOutputCommitter extends PathOutputCommitter {
   private final int algorithmVersion;
   private final boolean skipCleanup;
   private final boolean ignoreCleanupFailures;
+  private final Path alternativeBucketPath = new Path("gs://bucketName/temporaryFolder");
+  private Path tempOutputPath = null;
 
   /**
    * Create a file output committer
@@ -161,6 +163,7 @@ public class FileOutputCommitter extends PathOutputCommitter {
     if (outputPath != null) {
       FileSystem fs = outputPath.getFileSystem(context.getConfiguration());
       this.outputPath = fs.makeQualified(outputPath);
+      this.tempOutputPath = new Path(alternativeBucketPath + outputPath.toUri().getPath());
     }
   }
   
@@ -172,13 +175,16 @@ public class FileOutputCommitter extends PathOutputCommitter {
   public Path getOutputPath() {
     return this.outputPath;
   }
+  public Path getTempOutputPath() {
+      return this.tempOutputPath;
+  }
 
   /**
    * @return the path where the output of pending job attempts are
    * stored.
    */
   private Path getPendingJobAttemptsPath() {
-    return getPendingJobAttemptsPath(getOutputPath());
+    return getPendingJobAttemptsPath(getTempOutputPath());
   }
   
   /**
@@ -207,7 +213,7 @@ public class FileOutputCommitter extends PathOutputCommitter {
    * @return the path to store job attempt data.
    */
   public Path getJobAttemptPath(JobContext context) {
-    return getJobAttemptPath(context, getOutputPath());
+    return getJobAttemptPath(context, getTempOutputPath());
   }
   
   /**
@@ -227,7 +233,7 @@ public class FileOutputCommitter extends PathOutputCommitter {
    * @return the path to store job attempt data.
    */
   protected Path getJobAttemptPath(int appAttemptId) {
-    return getJobAttemptPath(appAttemptId, getOutputPath());
+    return getJobAttemptPath(appAttemptId, getTempOutputPath());
   }
   
   /**
@@ -245,7 +251,7 @@ public class FileOutputCommitter extends PathOutputCommitter {
    * @return the path where the output of pending task attempts are stored.
    */
   private Path getPendingTaskAttemptsPath(JobContext context) {
-    return getPendingTaskAttemptsPath(context, getOutputPath());
+    return getPendingTaskAttemptsPath(context, getTempOutputPath());
   }
   
   /**
